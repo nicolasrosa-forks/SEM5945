@@ -60,28 +60,28 @@ int main(int argc, char **argv){
   ros::Time current_time, first_time = ros::Time::now(); 
   ros::Duration(0.02).sleep();
 
+  /* --- Loop --- */
   while(ros::ok()){
     nh.setParam("/axle_track", axle_track);
     nh.setParam("/gear_ratio", gear_ratio);
     nh.setParam("/wheel_radius", wheel_radius);
+    
     current_time = ros::Time::now();
     if(int(1000*current_time.toSec()-1000*first_time.toSec())%5000 < 20){     
       toggle_curve = !toggle_curve;
-      if(toggle_curve){
-        ROS_INFO_STREAM("Toggle! Now on State 1.");
-      }else{
-        ROS_INFO_STREAM("Toggle! Now on State 2.");
-      }
+      ROS_INFO_STREAM("Toggled!");
     }
 
     if(toggle_robot){
       if(toggle_curve){
         wl.data = - (rpm_ref + dist(generator_l)) * gear_ratio;
         wr.data =   (rpm_ref + dist(generator_r)) * gear_ratio;
+        ROS_INFO_STREAM("Now on State 1.");
       }
       else{
         wl.data = (rpm_ref/4 + dist(generator_l)) * gear_ratio;
         wr.data = (rpm_ref/4 + dist(generator_r)) * gear_ratio;
+        ROS_INFO_STREAM("Now on State 2.");
       }
     }
     else{
@@ -90,6 +90,7 @@ int main(int argc, char **argv){
       first_time = current_time;
     }
 
+    // Publishing Values
     pub_left_rpm.publish(wl);
     pub_right_rpm.publish(wr);
     ros::spinOnce();
