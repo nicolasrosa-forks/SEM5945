@@ -33,8 +33,9 @@ int main(int argc, char **argv){
   ros::Rate loop_rate(50);  // Hertz (Hz)
 
   // Create topics
-  ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("/left_rpm",1);
-  ros::Publisher pub_right_rpm = nh.advertise<std_msgs::Float32> ("/right_rpm",1);
+  /* If we change to "/<side>_name", attention to the "/", different nodes will publish to the same node! */
+  ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("left_rpm",1);
+  ros::Publisher pub_right_rpm = nh.advertise<std_msgs::Float32> ("right_rpm",1);
   
   // Create services
   ros::ServiceServer service = nh.advertiseService("/toggle_robot", toggleRobot);
