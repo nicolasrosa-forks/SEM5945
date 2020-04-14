@@ -29,13 +29,13 @@ int main(int argc, char **argv){
   ros::init(argc, argv, "gmr_intro_node");
   
   // Declare node.
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
   ros::Rate loop_rate(50);  // Hertz (Hz)
 
   // Create topics
   /* If we change to "/<side>_name", attention to the "/", different nodes will publish to the same node! */
-  ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("left_rpm",1);
-  ros::Publisher pub_right_rpm = nh.advertise<std_msgs::Float32> ("right_rpm",1);
+  ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("/left_rpm",1);
+  ros::Publisher pub_right_rpm = nh.advertise<std_msgs::Float32> ("/right_rpm",1);
   
   // Create services
   ros::ServiceServer service = nh.advertiseService("/toggle_robot", toggleRobot);
@@ -44,7 +44,7 @@ int main(int argc, char **argv){
   double axle_track, wheel_radius, gear_ratio, rpm_ref, gaussian_noise_mean, gaussian_noise_stddev;
   nh.param("/axle_track", axle_track, 0.5);                         // Meters
   nh.param("/gaussian_noise_mean", gaussian_noise_mean, 0.0);       // RPM
-  nh.param("/gaussian_noise_stddev", gaussian_noise_stddev, 0.0);   // RPM
+  nh.param("/gaussian_noise_stddev", gaussian_noise_stddev, 1.0);   // RPM
   nh.param("/gear_ratio", gear_ratio, 20.0);                        // Ratio
   nh.param("/rpm_ref", rpm_ref, 15.0);                              // RPM
   nh.param("/wheel_radius", wheel_radius, 0.05);                    // Meters
