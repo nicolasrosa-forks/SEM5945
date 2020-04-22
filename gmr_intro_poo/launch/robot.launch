@@ -7,12 +7,14 @@
   <param name="gaussian_noise_mean" value="0.0"/>
   <param name="gaussian_noise_stddev" value="1.0"/>
   
-  <node pkg="gmr_intro" type="gmr_intro_node" name="gmr_intro_node" output="screen">
-  </node>
+  <node pkg="gmr_intro" type="gmr_intro_node" name="gmr_intro_node" output="screen"/>
   
   <node pkg="gmr_intro_poo" type="gmr_intro_poo_node" name="gmr_intro_poo_node" output="screen">
     <param name="topic_name_left_rpm" value="/left_rpm"/>
     <param name="topic_name_right_rpm" value="/right_rpm"/>
   </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="map2base_link" args="0 0 0 0 0 0 map base_link 50"/>
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find gmr_intro_poo)/rviz/gmr_intro_poo.rviz" />
 
 </launch>

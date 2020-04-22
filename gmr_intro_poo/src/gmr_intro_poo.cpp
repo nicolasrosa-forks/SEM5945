@@ -58,6 +58,8 @@ void RobotClass::calculateOdom(){
     double dt, vx, wz;
     nav_msgs::Odometry odom;
     tf2::Quaternion odom_quat;
+    tf::TransformBroadcaster odom_broadcaster;
+
 
     // Cinematic equations for a differential traction robot on unicycle model representation
     dt = cur_timestamp.toSec() - _prev_timestamp.toSec();
@@ -80,8 +82,29 @@ void RobotClass::calculateOdom(){
     odom.pose.pose.position.y = _robot_pose.y;
     
     // geometry_msgs/Quaternion: This represents an orientation in free space in quaternion form.
-    odom.pose.pose.orientation = tf2::toMsg(odom_quat); // tf2::Quaternion -> geometry_msgs::QUaternion
+    odom.pose.pose.orientation = tf2::toMsg(odom_quat); // tf2::Quaternion -> geometry_msgs::Quaternion
     
+    // First, we'll publish the transform over tf
+    geometry_msgs::TransformStamped odom_trans;
+    odom_trans.header.stamp = cur_timestamp;
+    odom_trans.header.frame_id = "odom";
+    odom_trans.child_frame_id = "base_link";
+
+    odom_trans.transform.translation.x = _robot_pose.x;
+    odom_trans.transform.translation.y = _robot_pose.y;
+    odom_trans.transform.translation.z = 0.0;
+    odom_trans.transform.rotation = tf2::toMsg(odom_quat);
+    // odom_trans.transform.rotation.x = odom_quat;
+    // odom_trans.transform.rotation.y = odom_quat;
+    // odom_trans.transform.rotation.z = odom_quat;
+
+
+    //send the transform
+    odom_broadcaster.sendTransform(odom_trans);
+
     // Publish nav_msgs/Odometry message
-    _pub_odom.publish(odom);
+    odom.header.stamp = ros::Time::now();
+    odom.header.frame_id = "odom";
+    odom.child_frame_id = "base_link";
+        _pub_odom.publish(odom);
 }
