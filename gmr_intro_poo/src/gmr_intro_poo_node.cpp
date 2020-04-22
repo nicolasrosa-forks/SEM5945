@@ -21,6 +21,7 @@ int main(int argc, char **argv){
     RobotClass robot(&nh);
 
     while(ros::ok()){
+        robot.checkToggleRobot();
         robot.calculateOdom();
         loop_rate.sleep();
         ros::spinOnce();

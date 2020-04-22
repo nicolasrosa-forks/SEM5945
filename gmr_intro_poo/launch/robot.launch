@@ -12,6 +12,7 @@
   <node pkg="gmr_intro_poo" type="gmr_intro_poo_node" name="gmr_intro_poo_node" output="screen">
     <param name="topic_name_left_rpm" value="/left_rpm"/>
     <param name="topic_name_right_rpm" value="/right_rpm"/>
+    <param name="time_between_toggles" value="-1.0"/>
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="map2base_link" args="0 0 0 0 0 0 map base_link 50"/>
