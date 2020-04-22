@@ -15,6 +15,7 @@
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="map2base_link" args="0 0 0 0 0 0 map base_link 50"/>
+  
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find gmr_intro_poo)/rviz/gmr_intro_poo.rviz" />
 
 </launch>
