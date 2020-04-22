@@ -4,6 +4,9 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <string>
+#include <nav_msgs/Odometry.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 /* ========================= */
 /*  RobotClass, Declaration  */
@@ -11,6 +14,7 @@
 class RobotClass{
     public:
         RobotClass(ros::NodeHandle *nh);
+        void calculateOdom();
 
     private:
         void subLeft(const std_msgs::Float32::ConstPtr &msg);
@@ -19,6 +23,8 @@ class RobotClass{
         ros::NodeHandle *_nh;
         ros::Subscriber _sub_left;
         ros::Subscriber _sub_right;
+        ros::Publisher _pub_odom;
+        ros::Time _prev_timestamp;
 
         struct Params{
             /* data */
@@ -33,4 +39,10 @@ class RobotClass{
             double left;
             double right;
         }_vel_m_s;
+
+        struct RobotPose{
+            double x;
+            double y;
+            double theta;
+        }_robot_pose;
 };
