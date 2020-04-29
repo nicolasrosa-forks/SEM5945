@@ -2,13 +2,12 @@
 /*  Libraries  */
 /* =========== */
 #include <ros/ros.h>
-#include <std_msgs/Float32.h>
-#include <string>
 #include <nav_msgs/Odometry.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf/transform_broadcaster.h>
+#include <std_msgs/Float32.h>
 #include <std_srvs/Trigger.h>
+
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 /* ========================= */
 /*  RobotClass, Declaration  */
@@ -30,6 +29,7 @@ class RobotClass{
         ros::Time _prev_timestamp;
         ros::Time _prev_timestamp_toggle;
         ros::ServiceClient _client_toggle_robot;
+        tf2_ros::TransformBroadcaster _odom_broadcaster;
 
         struct Params{
             /* Data */

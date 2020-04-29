@@ -10,7 +10,8 @@
 /* ====== */
 /*  Main  */
 /* ====== */
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
     // Inicialização da ROS no contexto deste nó
     ros::init(argc, argv, "gmr_intro_poo_node");
     ros::NodeHandle nh("~");
@@ -20,13 +21,11 @@ int main(int argc, char **argv){
     // um ponteiro a ros::NodeHandle é passado como argumento
     RobotClass robot(&nh);
 
-    while(ros::ok()){
+    while(ros::ok())
+    {
         robot.checkToggleRobot();
         robot.calculateOdom();
         loop_rate.sleep();
         ros::spinOnce();
     }
 }
-
-
-

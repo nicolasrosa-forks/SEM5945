@@ -9,8 +9,10 @@ project(gmr_intro_poo)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  geometry_msgs
   std_msgs
-  tf
+  tf2
+  tf2_ros
 )
 
 ## System dependencies are found with CMake's conventions

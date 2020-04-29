@@ -78,8 +78,6 @@ void RobotClass::calculateOdom(){
     double dt, vx, wz;
     nav_msgs::Odometry odom;
     tf2::Quaternion odom_quat;
-    geometry_msgs::TransformStamped odom_trans;
-    tf::TransformBroadcaster odom_broadcaster;
 
     // Cinematic equations for a differential traction robot on unicycle model representation
     dt = cur_timestamp.toSec() - _prev_timestamp.toSec();
@@ -87,17 +85,17 @@ void RobotClass::calculateOdom(){
     vx = 0.5*(vr+vl);                                   // Eq. 1, vx = (vr+vl)/2
     wz = (vr-vl)/_params.axle_track;                    // Eq. 2, wz = (vr-vl)/L
     _robot_pose.theta += wz*dt;                         // Eq. 8, θ(t) = θ(t-1) + wz*dt
-    _robot_pose.x += vx*std::cos(_robot_pose.theta);    // Eq. 6, x(t) = x(t-1) + vx*cosθ
-    _robot_pose.y += vx*std::sin(_robot_pose.theta);    // Eq. 7, y(t) = y(t-1) + vx*sinθ
+    _robot_pose.x += vx*std::cos(_robot_pose.theta)*dt;    // Eq. 6, x(t) = x(t-1) + vx*cosθ
+    _robot_pose.y += vx*std::sin(_robot_pose.theta)*dt;    // Eq. 7, y(t) = y(t-1) + vx*sinθ
 
     // ----- Odometry Quaternion ----- //
     //Set the quaternion using fixed axis RPY (Roll, Pitch, Yaw).
-    odom_quat.setRPY(0, 0, _robot_pose.theta); 
+    odom_quat.setRPY(0, 0, _robot_pose.theta);
 
     // ----- Odometry Message ----- //
     odom.header.stamp = ros::Time::now();
-    odom.header.frame_id = "odom";
-    odom.child_frame_id = "base_link";
+    odom.header.frame_id = "/map";
+    odom.child_frame_id = "/base_link";
     
     // geometry_msgs/Twist: This expresses velocity in free space broken into its linear and angular parts.
     odom.twist.twist.angular.z = wz;
@@ -112,16 +110,16 @@ void RobotClass::calculateOdom(){
     
     // ----- Odometry transform ----- //
     // First, we'll publish the transform over tf
+	geometry_msgs::TransformStamped odom_trans;
+    odom_trans.header.frame_id = "/map";
+    odom_trans.child_frame_id = "/base_link";
     odom_trans.header.stamp = cur_timestamp;
-    odom_trans.header.frame_id = "odom";
-    odom_trans.child_frame_id = "base_link";
-
-    odom_trans.transform.translation.x = _robot_pose.x;
-    odom_trans.transform.translation.y = _robot_pose.y;
-    odom_trans.transform.translation.z = 0.0;
+    
+    odom_trans.transform.translation.x = odom.pose.pose.position.x;
+    odom_trans.transform.translation.y = odom.pose.pose.position.y;
     odom_trans.transform.rotation = tf2::toMsg(odom_quat);
 
     // Send the transform and Publish nav_msgs/Odometry message
-    odom_broadcaster.sendTransform(odom_trans);
+    _odom_broadcaster.sendTransform(odom_trans);
     _pub_odom.publish(odom);
 }
