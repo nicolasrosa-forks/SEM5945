@@ -24,7 +24,8 @@ bool toggleRobot(std_srvs::Trigger::Request& request, std_srvs::Trigger::Respons
 /* ======= */
 /*  Main   */
 /* ======= */
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
   // Start ROS within the context of this node.
   ros::init(argc, argv, "gmr_intro_node");
   
@@ -87,19 +88,23 @@ int main(int argc, char **argv){
 
     }
 
-    if(toggle_robot){
-      if(toggle_curve){
+    if(toggle_robot)
+    {
+      if(toggle_curve)
+      {
         wl.data = - (rpm_ref + dist(generator_l)) * gear_ratio;
         wr.data =   (rpm_ref + dist(generator_r)) * gear_ratio;
         ROS_INFO_STREAM("Now on State 1.");
       }
-      else{
+      else
+      {
         wl.data = (rpm_ref/4 + dist(generator_l)) * gear_ratio;
         wr.data = (rpm_ref/4 + dist(generator_r)) * gear_ratio;
         ROS_INFO_STREAM("Now on State 2.");
       }
     }
-    else{
+    else
+    {
       wl.data = 0;
       wr.data = 0;
       first_time = current_time;
