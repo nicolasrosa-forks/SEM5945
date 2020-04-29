@@ -1,6 +1,6 @@
 # Introdução de ROS e robôs móveis terrestres
 
-Após clonar este repositório ao seu ROS workspace/src local (`$git clone https://github.com/akihirohh/gmr_intro.git `), não se esqueça de compilar:
+Após clonar este repositório ao seu ROS workspace/src local (`$git clone https://bitbucket.org/grupomecatronica/gmr_intro.git`), não se esqueça de compilar:
 ```console
 user@pc: ~/ros_ws$ catkin_make
 ```
@@ -151,7 +151,8 @@ user@pc: ~/ros_ws$ rosrun sub_rpm sub_rpm_node
 Agora, você é capaz de usar o dados de um tópico dentro do seu código! 
 
 
+Contato: Akihiro (akihirohh@gmail.com)
 
-
-
+Apoio da Fundação de Amparo à Pesquisa do Estado de São Paulo (FAPESP) através do processo nº 2018/10894-2. 
+As opiniões, hipóteses e conclusões ou recomendações expressas neste material são de responsabilidade do(s) autor(es) e não necessariamente refletem a visão da FAPESP.
 

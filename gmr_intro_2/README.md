@@ -1,15 +1,15 @@
 # Introdução de ROS e robôs móveis terrestres
 
-Até o momento, fizemos o [primeiro subscritor](https://github.com/akihirohh/gmr_intro) e mexemos com [parâmetros e roslaunch](https://github.com/akihirohh/gmr_intro_1) sem nos importar com a aplicação em si. O que temos aqui é um robô com tração diferencial (*differential drive robot*) cujas velocidades angulares dos motores são publicadas em rotações por minuto [rpm] e cujos parâmetros conhecidos são: a) raio da roda (*/wheel_radius*); b) relação de transmissão devido à caixa de redução entre o motor e a roda (*/gear_ratio*); c) pista do eixo/distância transversal entre o centro das rodas. Um robô com tração diferencial é bastante simples (Figura 1): duas rodas atuadas independentemente e presença de apoios/rodízios para o equilíbrio tridimensional do robô.
+Até o momento, fizemos o [primeiro subscritor](https://bitbucket.org/grupomecatronica/gmr_intro) e mexemos com [parâmetros e roslaunch](https://bitbucket.org/grupomecatronica/gmr_intro_1) sem nos importar com a aplicação em si. O que temos aqui é um robô com tração diferencial (*differential drive robot*) cujas velocidades angulares dos motores são publicadas em rotações por minuto [rpm] e cujos parâmetros conhecidos são: a) raio da roda (*/wheel_radius*); b) relação de transmissão devido à caixa de redução entre o motor e a roda (*/gear_ratio*); c) pista do eixo/distância transversal entre o centro das rodas. Um robô com tração diferencial é bastante simples (Figura 1): duas rodas atuadas independentemente e presença de apoios/rodízios para o equilíbrio tridimensional do robô.
 
  ![](figs/labrom_02.jpg)
-
+ 
  **Figura 1**: Exemplo de robô com tração diferencial
 
 Com base na informação das velocidades dos motores, queremos saber a posição do robô no espaço, que para robôs terrestres móveis podemos simplificar para o caso 2D, então queremos *(x, y, &theta;)*, em que *(x, y)* é a posição cartesiana e &theta; é o ângulo para o qual a frente do robô está apontada. Usaremos o modelo do monociclo em que o conjunto dos motores são reduzidos a uma única roda que tem velocidade linear na direção em que rola e velocidade angular em torno do próprio eixo, como podemos ver na Figura 2.
 
  ![](figs/robo_diferencial.png)
-
+ 
  **Figura 2**: Transformação de tração diferencial para modelo de monociclo
 
 em que temos um eixo (x,y) global e fixo, um eixo (x<sub>r</sub>, y<sub>r</sub>) do robô local, fixo ao seu centro de rotação e com x<sub>r</sub> apontando para a sua frente,  v<sub>r</sub> é a velocidade linear da roda direita (positiva no sentido positivo de x<sub>r</sub>), v<sub>l</sub> é a velocidade linear da roda esquerda (positiva no sentido positivo de x<sub>r</sub>) e L é o comprimento da pista do eixo. Sobre o monociclo equivalente, temos que v<sub>x</sub> é a velocidade linear no eixo x<sub>r</sub>, w<sub>z</sub> é a velocidade angular em torno do próprio eixo, portanto rotação em torno do eixo z<sub>r</sub>, e &theta; é o ângulo entre uma reta paralela ao eixo x global e o eixo x<sub>r</sub>. Seguimos que a velocidade linear e angular do monociclo podem ser expressas em função das velocidades dos motores do robô:
@@ -35,16 +35,16 @@ v = w_rpm / T * R * 2&pi;/60 (Eq. 9)
 
 em que v é a velocidade linear em m/s, w_rpm é a velocidade de rotação do motor em rpm, T é a relação de transmissão e R é o raio da roda.
 
-Nosso objetivo é subscrever às leituras de velocidade de motor (*/left_rpm* e */right_rpm*) e, a partir delas, publicar a posição estimada do robô. Apesar de ainda simples, nos prepararemos para projetos maiores com ROS. Uma boa prática é a utilização de classes. Neste tutorial, reescreveremos o [primeiro subscritor](https://github.com/akihirohh/gmr_intro) utilizando programação orientada a objetos (POO). O nó resultante será utilizado nos próximos tutoriais.
+Nosso objetivo é subscrever às leituras de velocidade de motor (*/left_rpm* e */right_rpm*) e, a partir delas, publicar a posição estimada do robô. Apesar de ainda simples, nos prepararemos para projetos maiores com ROS. Uma boa prática é a utilização de classes. Neste tutorial, reescreveremos o [primeiro subscritor](https://bitbucket.org/grupomecatronica/gmr_intro) utilizando programação orientada a objetos (POO). O nó resultante será utilizado nos próximos tutoriais.
 
 **Embora os códigos já estejam disponíveis neste repositório, só os utilize de referência e siga o tutorial para criar o seu pacote. Criar as pastas/arquivos e digitar o código manualmente são fundamentais para entender melhor como é a estrutura de um pacote e as particularidades das funções.**
 
 Criaremos o pacote com as dependências necessárias
-```shell
+```console
 user@pc:~/ros_ws/src$ catkin_create_pkg gmr_intro_poo roscpp std_msgs
 ```
 Descomentaremos/adicionaremos as seguintes linhas no arquivo gmr_intro_poo/CMakeLists.txt:
-```cmake
+```
 add_executable(${PROJECT_NAME}_node src/gmr_intro_poo_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node
     ${catkin_LIBRARIES}
@@ -78,14 +78,14 @@ RobotClass robot(&nh);
 ```
 
 Devido à necessidade dos dois novos arquivos, editaremos gmr_intro_poo/CMakeLists.txt novamente. Para o cabeçalho, descomente a linha 118 para que a pasta include seja checada durante a compilação:
-```cmake
+```
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
 ```
 e para a implementação, altere a linha de *add_executable* para que também use o cpp referente à implementação da classe na hora de gerar o executável/nó:
-```cmake
+```
 add_executable(${PROJECT_NAME}_node src/gmr_intro_poo_node.cpp src/gmr_intro_poo.cpp)
 ```
 
@@ -156,7 +156,27 @@ void RobotClass::subRight(const std_msgs::Float32::ConstPtr &msg)
 }
 ```
 
-Note que o construtor recebe o ponteiro de ros::NodeHandle, aloca para um membro privado `_nh`, faz a importação de parâmetros e inicialização dos subscritores. Observe que essa inicialização é diferente de quando o subscritor foi escrito sem POO: eram três argumentos e agora são quatro. Agora também é necessário passar uma referência à classe com o uso da keyword `this`.
+Note que o construtor recebe o ponteiro de ros::NodeHandle, aloca para um membro privado `_nh`, faz a importação de parâmetros e inicialização dos subscritores. Na importação de parâmetros, utilizamos uma função template:
+```cpp
+void ros::param::param 	( 	const std::string &  	param_name,
+		                    T &  	param_val,
+		                    const T &  	default_val	 
+	                    ) 
+``` 
+
+então temos a possibilidade de explicitamente definir o tipo:
+
+```cpp
+    _nh->param<std::string>("nome_topico_left_rpm", _params.topic_name_left_rpm, "/left_rpm");
+```
+
+ou passar todos os argumentos como <std::string>. Note que para o compilador, o argumento `"/left_rpm"` é interpretado como char[10] e, portanto, há conflito na dedução do tipo necessário para a chamada da função:
+
+```cpp
+    _nh->param("nome_topico_left_rpm", _params.topic_name_left_rpm, std::string("/left_rpm"));
+```
+
+ Observe que a inicialização dos subscritores é diferente de quando o subscritor foi escrito sem POO: eram três argumentos e agora são quatro. Agora também é necessário passar uma referência à classe com o uso da keyword `this`.
 
 ```cpp
     _sub_left = _nh->subscribe(_params.topic_name_left_rpm, 1, &RobotClass::subLeft, this);
@@ -196,12 +216,12 @@ Para facilitar, podemos fazer um arquivo launch. Crie a pasta gmr_intro_poo/laun
 Esse arquivo launch inicializa os parâmetros globais, o nó que representa o robô e o nosso último nó criado. Observe que temos dois parâmetros internos ao gmr_intro_poo_node. 
 
 Agora, é só compilar
-```shell
+```console
 user@pc:~/ros_ws: $catkin_make
 ```
 
 e rodar o arquivo launch:
-```shell
+```console
 user@pc:~/ros_ws: $roslaunch gmr_intro_poo robot.launch
 ```
 
@@ -233,3 +253,9 @@ Você observará uma saída como:
 devido ao atributo `output="screen"` que colocamos em ambos os nós.
 
 Por enquanto, só utilizamos a Eq. 9 já que só fizemos a conversão do valor recebido em rpm para m/s. No próximo tutorial, acrescentaremos um publicador da posição do robô à classe RobotClass e, portanto, utilizaremos as outras equações.
+
+
+Contato: Akihiro (akihirohh@gmail.com)
+
+Apoio da Fundação de Amparo à Pesquisa do Estado de São Paulo (FAPESP) através do processo nº 2018/10894-2. 
+As opiniões, hipóteses e conclusões ou recomendações expressas neste material são de responsabilidade do(s) autor(es) e não necessariamente refletem a visão da FAPESP.

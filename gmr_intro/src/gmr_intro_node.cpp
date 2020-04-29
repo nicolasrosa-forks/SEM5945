@@ -15,7 +15,7 @@ bool toggle_robot = true;
 bool toggleRobot(std_srvs::Trigger::Request& request, std_srvs::Trigger::Response& response)
 {
   toggle_robot = !toggle_robot;
-
+  //ROS_WARN_STREAM("Toogling Robot...");
   response.success = true;
   response.message = "Someone toggled me...";
   return true;
@@ -28,16 +28,16 @@ int main(int argc, char **argv){
   // Start ROS within the context of this node.
   ros::init(argc, argv, "gmr_intro_node");
   
-  // Declare node.
+  // Declare Node
   ros::NodeHandle nh("~");
   ros::Rate loop_rate(50);  // Hertz (Hz)
 
-  // Create topics
+  // Create Topics
   /* If we change to "/<side>_name", attention to the "/", different nodes will publish to the same node! */
   ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("/left_rpm",1);
   ros::Publisher pub_right_rpm = nh.advertise<std_msgs::Float32> ("/right_rpm",1);
   
-  // Create services
+  // Create Service Server
   ros::ServiceServer service = nh.advertiseService("/toggle_robot", toggleRobot);
 
   // Create Params
@@ -58,19 +58,33 @@ int main(int argc, char **argv){
   std::default_random_engine generator_l, generator_r;
   std::normal_distribution<double> dist(gaussian_noise_mean, gaussian_noise_stddev);
 
-  ros::Time current_time, first_time = ros::Time::now(); 
+  ros::Time current_time, first_time = ros::Time::now(), initial_curve_time = first_time, initial_straight_time = first_time; 
   ros::Duration(0.02).sleep();
 
-  /* --- Loop --- */
-  while(ros::ok()){
+  double vl, vr, wz, t_curve;
+  vl = -rpm_ref*wheel_radius*2*M_PI/60.0;
+  vr = -vl;
+  wz = (vr-vl)/axle_track;
+  t_curve = 0.5*M_PI/wz;
+
+  while(ros::ok())
+  {
     nh.setParam("/axle_track", axle_track);
     nh.setParam("/gear_ratio", gear_ratio);
     nh.setParam("/wheel_radius", wheel_radius);
-    
     current_time = ros::Time::now();
-    if(int(1000*current_time.toSec()-1000*first_time.toSec())%5000 < 20){     
+    if(current_time.toSec() - initial_curve_time.toSec() > t_curve && toggle_curve)
+    {     
       toggle_curve = !toggle_curve;
+      initial_straight_time = current_time;
+      ROS_INFO_STREAM("Toggle");
+    }
+    else if(current_time.toSec() - initial_straight_time.toSec() > 5.0 && !toggle_curve )
+    {
+      toggle_curve = !toggle_curve;
+      initial_curve_time = current_time;
       ROS_INFO_STREAM("Toggled!");
+
     }
 
     if(toggle_robot){
@@ -94,6 +108,7 @@ int main(int argc, char **argv){
     // Publishing Values
     pub_left_rpm.publish(wl);
     pub_right_rpm.publish(wr);
+    //ROS_INFO_STREAM("Speeds published.");
     ros::spinOnce();
     loop_rate.sleep();
   }

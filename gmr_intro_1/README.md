@@ -2,13 +2,13 @@
 
 *Observação: não é necessário clonar este repositório.*
 
-Criamos o subscritor em https://github.com/akihirohh/gmr_intro para o tópico */left_rpm*. Porém, temos o */right_rpm* também. O que precisamos para conseguir a informação desse último sem precisar escrever outro nó? Neste tutorial, veremos um pouco sobre parâmetros e roslaunch.
+Criamos o [subscritor](https://bitbucket.org/grupomecatronica/gmr_intro) para o tópico */left_rpm*. Porém, temos o */right_rpm* também. O que precisamos para conseguir a informação desse último sem precisar escrever outro nó? Neste tutorial, veremos um pouco sobre parâmetros e roslaunch.
 
 *Preparação:* deixe rodando `roscore` e `rosrun gmr_intro gmr_intro_node`.
 
 ## Utilizando parâmetros [C++]
 
-Os parâmetros ROS possibilitam a troca de valor de variáveis dos nós sem a necessidade de recompilação. Eles podem ser acessados do servidor de parâmetros, que é executado junto de rosmaster. Através da linha de comando `$ rosparam list`, podemos ver alguns parâmetros disponíveis, por exemplo, */axle_track*, */gear_ratio* e */wheel_radius*. Podemos obter o seu valor com `rosparam get <param>`, por exemplo `rosparam get /axle_track`. Mas o que nos interessa agora é acessá-los dentro do nó. Para isso, podemos utilizar dois métodos: ros::NodeHandle::getParam() ou ros::param::get().
+Os parâmetros ROS possibilitam a troca de valor de variáveis dos nós sem a necessidade de recompilação. Eles podem ser acessados do servidor de parâmetros, que é executado junto de rosmaster. Através da linha de comando `$ rosparam list`, podemos ver alguns parâmetros disponíveis, por exemplo, */axle_track*, */gear_ratio* e */wheel_radius*. Note que os parâmetros continuarão disponíveis enquanto o master estiver ativo (i.e. um `roscore` rodando). Podemos obter o seu valor com `rosparam get <param>`, por exemplo `rosparam get /axle_track`. Mas o que nos interessa agora é acessá-los dentro do nó. Para isso, podemos utilizar dois métodos: ros::NodeHandle::getParam() ou ros::param::get().
 
 Atualizando nosso subscritor em ~ros_ws/src/sub_rpm/src/sub_rpm_node.cpp:
 
@@ -196,3 +196,9 @@ ros::Publisher pub_left_rpm = nh.advertise<std_msgs::Float32> ("/left_rpm",1);
 Neste caso, os dois robôs estão publicando simultaneamente em /left_rpm e /right_rpm, o que exigiria mudança em gmr_intro_node.cpp para tornar os nomes locais. 
 
 Com este tutorial, temos duas ferramentas fundamentais para acelerar o desenvolvimento da parte de software de um robô móvel: os parâmetros e os arquivos launch.
+
+
+Contato: Akihiro (akihirohh@gmail.com)
+
+Apoio da Fundação de Amparo à Pesquisa do Estado de São Paulo (FAPESP) através do processo nº 2018/10894-2. 
+As opiniões, hipóteses e conclusões ou recomendações expressas neste material são de responsabilidade do(s) autor(es) e não necessariamente refletem a visão da FAPESP.
