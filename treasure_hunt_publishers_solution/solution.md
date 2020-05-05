@@ -327,4 +327,4 @@ data: "<array type: uint8, length: 1172793>"
 $ rqt_image_view /red_line
 ```
 
-![](/home/nicolas/catkin_ws/src/SEM5945/treasure_hunt_publishers/include/.end.png)
+![](./.end.png)
