@@ -1,20 +1,32 @@
--- DO NOT WRITE CODE OUTSIDE OF THE if-then-end SECTIONS BELOW!! (unless the code is a function definition)
+function subscriber_callback(msg)
+    -- This is the subscriber callback function
+    sim.addStatusbarMessage('subscriber receiver following Float32: '..msg.data)
+end
 
-if (sim_call_type==sim.syscb_init) then
-    -- Check if the required ROS plugin is there:
-    moduleName=0
-    moduleVersion=0
-    index=0
-    pluginNotFound=true
+function getTransformStamped(objHandle,name,relTo,relToName)
+    -- This function retrieves the stamped transform for a specific object
+    t=sim.getSystemTime()
+    p=sim.getObjectPosition(objHandle,relTo)
+    o=sim.getObjectQuaternion(objHandle,relTo)
+    return {
+        header={
+            stamp=t,
+            frame_id=relToName
+        },
+        child_frame_id=name,
+        transform={
+            translation={x=p[1],y=p[2],z=p[3]},
+            rotation={x=o[1],y=o[2],z=o[3],w=o[4]}
+        }
+    }
+end
 
-    while moduleName do
-        moduleName,moduleVersion=sim.getModuleName(index)
-        if (moduleName=='Ros') then
-            pluginNotFound=false
-        end
-        index=index+1
-    end
-    
+function sysCall_init()
+    -- The child script initialization
+    objectHandle=sim.getObjectAssociatedWithScript(sim.handle_self)
+    objectName=sim.getObjectName(objectHandle)
+    rosInterfacePresent=simROS
+
     -- Retrieve handles
     leftMotorHandle  = sim.getObjectHandle('left_motor') 
     rightMotorHandle = sim.getObjectHandle('right_motor')
@@ -24,74 +36,78 @@ if (sim_call_type==sim.syscb_init) then
     leftSonarHandle = sim.getObjectHandle('left_sonar')
 
     -- Declaring the signals
-    sim.setFloatSignal('frontSonarSignal',0.0)
-    sim.setFloatSignal('rightSonarSignal',0.0)
-    sim.setFloatSignal('leftSonarSignal',0.0)
-    sim.setFloatSignal('rightMotorSignal',0.0)
-    sim.setFloatSignal('leftMotorSignal',0.0)
+    -- sim.setFloatSignal('frontSonarSignal',0.0)
+    -- sim.setFloatSignal('rightSonarSignal',0.0)
+    -- sim.setFloatSignal('leftSonarSignal',0.0)
+    -- sim.setFloatSignal('rightMotorSignal',0.0)
+    -- sim.setFloatSignal('leftMotorSignal',0.0)
 
-    -- Ok now launch the ROS client application:
-    if (not pluginNotFound) then
-        -- Publisher
-        simExtROS_enablePublisher('vehicle/frontSonar',1,simros_strmcmd_get_float_signal,-1,-1,'frontSonarSignal')
-        simExtROS_enablePublisher('vehicle/leftSonar',1,simros_strmcmd_get_float_signal,-1,-1,'leftSonarSignal')
-        simExtROS_enablePublisher('vehicle/rightSonar',1,simros_strmcmd_get_float_signal,-1,-1,'rightSonarSignal')
-        simExtROS_enablePublisher('vehicle/odometry',1,simros_strmcmd_get_odom_data,vehicleHandle,-1,'')
-        -- Subscriber
-        simExtROS_enableSubscriber('vehicle/motorLeftSpeed',1,simros_strmcmd_set_float_signal ,-1,-1,'leftMotorSignal')
-        simExtROS_enableSubscriber('vehicle/motorRightSpeed',1,simros_strmcmd_set_float_signal  ,-1,-1,'rightMotorSignal')
-    end
-
-end
-
-
-if (sim_call_type==sim.syscb_actuation) then
-    leftMotorVal = sim.getFloatSignal('leftMotorSignal')
-    rightMotorVal = sim.getFloatSignal('rightMotorSignal')
-
-    if (math.abs(leftMotorVal) > 10) then
-        leftMotorVal = 10*math.abs(leftMotorVal)/leftMotorVal
-    end
-    if (math.abs(rightMotorVal) > 10) then
-        rightMotorVal = 10*math.abs(rightMotorVal)/rightMotorVal
-    end
-    sim.setJointTargetVelocity(leftMotorHandle,leftMotorVal)
-    sim.setJointTargetVelocity(rightMotorHandle,rightMotorVal)
-end
-
-
-if (sim_call_type==sim.syscb_sensing) then
-    -- Put your main SENSING code here
-    result,distance=sim.readProximitySensor(frontSonarHandle)
-    -- Check if distance reading was valid
-    if (result~= 1) then
-        distance = 0
-    end
-    sim.setFloatSignal('frontSonarSignal',distance)
-
-    -- Right Sensor
-    result,distance=sim.readProximitySensor(rightSonarHandle)
-    -- Check if distance reading was valid
-    if (result~= 1) then
-        distance = 0
-    end
-    sim.setFloatSignal('rightSonarSignal',distance)
-
-    -- Left Sensor
-    result,distance=sim.readProximitySensor(leftSonarHandle)
-    -- Check if distance reading was valid
-    if (result~= 1) then
-        distance = 0
-    end
-    sim.setFloatSignal('leftSonarSignal',distance)
-
-
+    -- Prepare the float32 publisher and subscriber (we subscribe to the topic we advertise):
+    if rosInterfacePresent then
+        publisher=simROS.advertise('/simulationTime','std_msgs/Float32')
+        subscriber=simROS.subscribe('/simulationTime','std_msgs/Float32','subscriber_callback')
     
+        -- Publisher
+        frontSonar_pub = simROS.advertise('vehicle/frontSonar','std_msgs/Bool')
+        leftSonar_pub = simROS.advertise('vehicle/leftSonar','std_msgs/Bool')
+        rightSonar_pub = simROS.advertise('vehicle/rightSonar','std_msgs/Bool')
+        -- odometry = simROS.advertise('vehicle/odometry',1,simros_strmcmd_get_odom_data,vehicleHandle,-1,'')
+    
+        -- Subscriber
+        -- motorLeftSpeed_sub = simROS.subscribe('vehicle/motorLeftSpeed','std_msgs/Float32','setLeftMotorVelocity_cb')
+        -- motorRightSpeed_sub = simROS.subscribe('vehicle/motorRightSpeed','std_msgs/Float32','setRightMotorVelocity_cb')
+motorLeftSpeed_sub = simROS.subscribe('/left_rpm','std_msgs/Float32','setLeftMotorVelocity_cb')
+        motorRightSpeed_sub = simROS.subscribe('/right_rpm','std_msgs/Float32','setRightMotorVelocity_cb')
+    end
 end
 
+function setLeftMotorVelocity_cb(msg)
+    -- Left motor speed subscriber callback
+    sim.setJointTargetVelocity(leftMotorHandle,msg.data/10)
+end
 
-if (sim_call_type==sim.syscb_cleanup) then
+function setRightMotorVelocity_cb(msg)
+    -- Right motor speed subscriber callback
+    sim.setJointTargetVelocity(rightMotorHandle,msg.data/10)
+end
 
-    -- Put some restoration code here
+function sysCall_actuation()
+    -- Send an updated simulation time message, and send the transform of the object attached to this script:
+    if rosInterfacePresent then
+        simROS.publish(publisher,{data=sim.getSimulationTime()})
 
+        local  leftSonar_res=sim.readProximitySensor( leftSonarHandle)
+        local frontSonar_res=sim.readProximitySensor(frontSonarHandle)
+        local rightSonar_res=sim.readProximitySensor(rightSonarHandle)
+    
+        local  leftSonar_detectionTrigger = {}
+        local frontSonar_detectionTrigger = {}
+        local rightSonar_detectionTrigger = {}
+        
+        leftSonar_detectionTrigger['data']  =  leftSonar_res > 0
+        frontSonar_detectionTrigger['data'] = frontSonar_res > 0
+        rightSonar_detectionTrigger['data'] = rightSonar_res > 0
+        
+        simROS.publish( leftSonar_pub,  leftSonar_detectionTrigger)
+        simROS.publish(frontSonar_pub, frontSonar_detectionTrigger)
+        simROS.publish(rightSonar_pub, rightSonar_detectionTrigger)
+        
+        -- Send the robot's transform:
+        simROS.sendTransform(getTransformStamped(objectHandle,objectName,-1,'world'))
+        -- To send several transforms at once, use simROS.sendTransforms instead
+    end
+end
+
+function sysCall_cleanup()
+    -- Following not really needed in a simulation script (i.e. automatically shut down at simulation end):
+    if rosInterfacePresent then
+        simROS.shutdownPublisher(publisher)
+        simROS.shutdownSubscriber(subscriber)
+        
+        simROS.shutdownPublisher(leftSonar_pub)
+        simROS.shutdownPublisher(frontSonar_pub)
+        simROS.shutdownPublisher(rightSonar_pub)
+        simROS.shutdownSubscriber(motorLeftSpeed_sub)
+        simROS.shutdownSubscriber(motorRightSpeed_sub)
+    end
 end
