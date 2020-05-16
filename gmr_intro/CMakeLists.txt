@@ -135,6 +135,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/gmr_intro_node.cpp)
+add_executable(${PROJECT_NAME}_ds4_node src/gmr_intro_ds4_node.cpp)
 add_executable(gmr_odom_node src/gmr_odom_node.cpp)
 
 ## Rename C++ executable without prefix
@@ -151,6 +152,11 @@ add_executable(gmr_odom_node src/gmr_odom_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(${PROJECT_NAME}_ds4_node
+  ${catkin_LIBRARIES}
+)
+
 target_link_libraries(gmr_odom_node
   ${catkin_LIBRARIES}
 )
